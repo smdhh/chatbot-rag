@@ -1,0 +1,283 @@
+{
+  "name": "RAG - Chat",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e84b3d47-9116-47b1-a7d6-bad8c4b0a9db",
+      "name": "When chat message received",
+      "webhookId": "8e9d3545-325f-44f0-a3a0-c62c9891b427"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemPromptTemplate": "Tu es un assistant documentaire. Réponds uniquement à partir du contexte ci-dessous, en français.\nSi l'information n'est pas dans le contexte, réponds : « Je ne trouve pas cette information dans les documents. »\nN'invente jamais de chiffre ni de référence.\n\nContexte :\n{context}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.7,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7c704ed9-1e1b-4f24-b171-e30910ed76da",
+      "name": "Question and Answer Chain"
+    },
+    {
+      "parameters": {
+        "model": "mistral:latest",
+        "options": {
+          "temperature": 0.1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        112,
+        208
+      ],
+      "id": "f8ef91c9-61dc-405f-bb4d-cfd1e00dde24",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rRGPuwaOBITNLxWE",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        368,
+        208
+      ],
+      "id": "d5bb2c77-da31-48d4-a770-45cbf8626309",
+      "name": "Vector Store Retriever"
+    },
+    {
+      "parameters": {
+        "memoryKey": {
+          "__rl": true,
+          "value": "docs_asnr",
+          "mode": "list",
+          "cachedResultName": "docs_asnr"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        576,
+        224
+      ],
+      "id": "ea25b852-7abc-49f5-bd34-809145fe8a7f",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        672,
+        432
+      ],
+      "id": "648f1cf6-72c2-45ee-952a-13094a12e546",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rRGPuwaOBITNLxWE",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "720a8879-6e6e-4fe1-8c14-b91834d44a3c",
+              "name": "output",
+              "value": "=   {{ $('Question and Answer Chain').item.json.response }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        592,
+        0
+      ],
+      "id": "b88e0285-5e6e-4979-8d46-6d89ca5dbf8a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "C0YMONasCfDnQQts",
+          "mode": "list",
+          "cachedResultName": "journal_rag",
+          "cachedResultUrl": "/projects/7bacYPb85kRuOSSz/datatables/C0YMONasCfDnQQts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "date": "={{ $now.toISO() }}",
+            "question": "={{ $('When chat message received').item.json.chatInput }}",
+            "reponse": "=   {{ $('Question and Answer Chain').item.json.response }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "date",
+              "displayName": "date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "question",
+              "displayName": "question",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "reponse",
+              "displayName": "reponse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        0
+      ],
+      "id": "e70ee1ba-28cf-4e1e-816b-8518b94187c8",
+      "name": "Insert row"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question and Answer Chain": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9d03b5fe-a749-4b8e-858d-1ba6d5bad597",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e1f570e643f6eb299d3be2d811c2704644ee161a1a0b4cf27a7355fd49c15a9"
+  },
+  "nodeGroups": [],
+  "id": "3nNrebiFWVZIdvAD",
+  "tags": []
+}

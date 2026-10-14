@@ -1,0 +1,155 @@
+{
+  "name": "RAG - Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Ajouter des documents",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "fichier",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c50f540a-8c2b-4d7a-b347-c971d34d415a",
+      "name": "On form submission",
+      "webhookId": "1bcd6a02-2831-4afa-af52-76176849da75"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "memoryKey": {
+          "__rl": true,
+          "value": "docs_asnr",
+          "mode": "list"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        0
+      ],
+      "id": "9d0f5859-369d-422d-b716-6a242bb43b40",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:latest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        224,
+        208
+      ],
+      "id": "b09fa5d6-7b9d-42ca-9678-250492bb0ba1",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "rRGPuwaOBITNLxWE",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "loader": "pdfLoader",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        96
+      ],
+      "id": "8b46b045-3224-48cd-a028-0b7f5c0755c6",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        416,
+        304
+      ],
+      "id": "61eb7337-d7d1-4a82-b8d5-25d06b0ed8b6",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "553a17b7-a26d-47f9-ae91-4ae7031301b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5e1f570e643f6eb299d3be2d811c2704644ee161a1a0b4cf27a7355fd49c15a9"
+  },
+  "nodeGroups": [],
+  "id": "XNSFBOnPRfFP2AaD",
+  "tags": []
+}
